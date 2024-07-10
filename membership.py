@@ -48,13 +48,6 @@ def create_qr_code(token):
     return b64
 
 
-@app.route('/generate-token')
-def generate_token_route():
-    user_id = 1
-    token = generate_token(user_id)
-    return jsonify({'token': token})
-
-
 @app.route('/qr-code')
 def qr_code_route():
     if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
