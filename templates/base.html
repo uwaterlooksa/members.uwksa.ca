@@ -1,0 +1,56 @@
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <title>QR Code Refresh</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript">
+        function updateQRCode() {
+            $.ajax({
+                url: '/qr-code',
+                method: 'GET',
+                success: function (data) {
+                    $('#qr-code').attr('src', 'data:image/png;base64,' + data);
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        // Count down the expiry time from 30 seconds
+        function updateExpiryMessage() {
+            updateQRCode();
+            let expiryTime = 29;
+            setInterval(function () {
+                if (expiryTime == 0) {
+                    updateQRCode();
+                    expiryTime = 30;
+                }
+                $('#expiry-msg').text('This QR code expires in ' + expiryTime + ' second' + (expiryTime > 1 ? 's' : ''));
+                expiryTime--;
+            }, 1000);
+        }
+
+        $(document).ready(function () {
+            updateExpiryMessage();
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <img src="/static/KSA-gimp.png" class="avatar" alt="">
+        <h1>Member QR Code</h1>
+        <img id="qr-code" src="" height="300" width="300">
+        <p id="expiry-msg">This QR code expires in 30 seconds</p>
+    </div>
+</body>
+
+</html>

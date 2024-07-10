@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <script src="/static/html5-qrcode.min.js"></script>
+    <script type="module" src="/static/qr.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <img src="/static/KSA-gimp.png" class="avatar" alt="">
+        <h1>Verification</h1>
+        <div id="reader" style="width: 300px;"></div>
+        {% if message %}
+        <p id="result">{{ message }}</p>
+        {% endif %}
+        {% if user %}
+        <table>
+            <tr>
+                <td>Name</td>
+                <td>{{ user[1] + ' ' + user[2] }}</td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td>{{ user[3] }}</td>
+            </tr>
+            <tr>
+                <td>UW ID</td>
+                <td>{{ user[4] }}</td>
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+</body>
+
+</html>

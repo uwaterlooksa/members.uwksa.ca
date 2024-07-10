@@ -1,0 +1,35 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    font-family: 'Sans Serif';
+    color: #fff;
+    background-color: #222;
+}
+
+body {
+    overflow: hidden;
+}
+
+.avatar {
+    width: 150px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
+}
+
+#expiry-msg {
+    font-size: 18px;
+}
+
+h1 {
+    font-size: 30px;
+}
