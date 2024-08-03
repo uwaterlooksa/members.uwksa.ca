@@ -76,7 +76,7 @@ def verify():
         if not user:
             return jsonify({'message': 'User not found'}), 404
 
-        return render_template('verify.html', message="User verified")
+        return render_template('verify.html', message="User verified", user=user)
     else:
         return render_template('verify.html')
 
