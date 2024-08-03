@@ -64,7 +64,7 @@ def verify():
     if request.args.get('token'):
         token = request.args.get('token')
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+            payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'], leeway=datetime.timedelta(seconds=10))
         except jwt.ExpiredSignatureError:
             return render_template('verify.html', message='Token expired')
         except jwt.InvalidTokenError:
