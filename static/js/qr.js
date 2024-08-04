@@ -1,17 +1,14 @@
 function getQRCode() {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/qr-code',
-            method: 'GET',
-            success: function (data) {
-                const qrCode = 'data:image/png;base64,' + data;
-                resolve(qrCode);
-            },
-            error: function (error) {
-                reject(error);
-            }
-        });
-    });
+    return fetch('qr-code', {
+        headers: {
+            'X-Fetch': 'true'
+        },
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to get QR code');
+        }
+        return response.text();
+    }).then(data => `data:image/png;base64,${data}`);
 }
 
 function updateQRCode() {

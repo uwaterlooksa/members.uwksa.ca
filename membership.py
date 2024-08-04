@@ -50,7 +50,7 @@ def create_qr_code(token):
 
 @app.route('/qr-code')
 def qr_code_route():
-    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+    if request.headers.get('X-Fetch') != 'true':
         abort(403)
 
     user_id = 1
