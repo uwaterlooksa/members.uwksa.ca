@@ -83,7 +83,7 @@ def verify():
 
         return render_template('verify.html', message="User verified", user=user)
     else:
-        return render_template('verify.html')
+        return render_template('verify.html', message='No token to verify')
 
 
 @app.route('/')
