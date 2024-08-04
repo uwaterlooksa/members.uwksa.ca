@@ -1,6 +1,6 @@
-from membership import app
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from membership import app
 
 if __name__ == "__main__":
     app.wsgi_app = ProxyFix(
