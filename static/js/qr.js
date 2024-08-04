@@ -1,48 +1,57 @@
-function getQRCode() {
-    return fetch('qr-code', {
-        headers: {
-            'X-Fetch': 'true'
-        },
-    }).then(response => {
+const QR_CODE_URL = 'qr-code';
+const FETCH_HEADERS = { 'X-Fetch': 'true' };
+const QR_CODE_ELEMENT_ID = 'qr-code';
+const EXPIRY_MSG_ELEMENT_ID = 'expiry-msg';
+const QR_CODE_EXPIRY_TIME = 30; // seconds
+
+async function getQRCode() {
+    try {
+        const response = await fetch(QR_CODE_URL, { headers: FETCH_HEADERS });
         if (!response.ok) {
             throw new Error('Failed to get QR code');
         }
-        return response.text();
-    }).then(data => `data:image/png;base64,${data}`);
+        const data = await response.text();
+        return `data:image/png;base64,${data}`;
+    } catch (error) {
+        console.error('Error fetching QR code:', error);
+        throw error;
+    }
 }
 
 function updateQRCode() {
     let expiryTime = 0;
+    const qrCodeElement = document.getElementById(QR_CODE_ELEMENT_ID);
+    const expiryMsgElement = document.getElementById(EXPIRY_MSG_ELEMENT_ID);
 
-    function refreshQRCode() {
-        getQRCode().then(qr => {
-            document.getElementById('qr-code').src = qr;
-            expiryTime = 30;
+    const refreshQRCode = async () => {
+        try {
+            const qr = await getQRCode();
+            qrCodeElement.src = qr;
+            expiryTime = QR_CODE_EXPIRY_TIME;
             refreshExpiryMessage();
-        }).catch(error => {
-            console.log(error);
-        });
+
+            const intervalId = setInterval(async () => {
+                expiryTime--;
+                refreshExpiryMessage();
+                if (expiryTime <= 0) {
+                    clearInterval(intervalId);
+                    await refreshQRCode();
+                }
+            }, 1000);
+        } catch (error) {
+            console.error('Error refreshing QR code:', error);
+        }
     }
 
-    function refreshExpiryMessage() {
+    const refreshExpiryMessage = () => {
         if (expiryTime <= 0) {
-            document.getElementById('expiry-msg').textContent = 'Fetching new QR code';
+            expiryMsgElement.textContent = 'Fetching new QR code';
         } else {
-            document.getElementById('expiry-msg').textContent = 'This QR code expires in ' + expiryTime + ' second' + (expiryTime == 1 ? '' : 's');
+            expiryMsgElement.textContent = `This QR code expires in ${expiryTime} second${expiryTime === 1 ? '' : 's'}`;
         }
     }
 
     refreshQRCode();
-
-    setInterval(function () {
-        if (expiryTime == 1) {
-            refreshQRCode();
-        }
-        expiryTime--;
-        refreshExpiryMessage();
-    }, 1000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    updateQRCode();
-});
+document.addEventListener('DOMContentLoaded', updateQRCode);
