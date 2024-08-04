@@ -16,7 +16,7 @@ function updateQRCode() {
 
     function refreshQRCode() {
         getQRCode().then(qr => {
-            $('#qr-code').attr('src', qr);
+            document.getElementById('qr-code').src = qr;
             expiryTime = 30;
             refreshExpiryMessage();
         }).catch(error => {
@@ -26,9 +26,9 @@ function updateQRCode() {
 
     function refreshExpiryMessage() {
         if (expiryTime <= 0) {
-            $('#expiry-msg').text('Fetching new QR code');
+            document.getElementById('expiry-msg').textContent = 'Fetching new QR code';
         } else {
-            $('#expiry-msg').text('This QR code expires in ' + expiryTime + ' second' + (expiryTime == 1 ? '' : 's'));
+            document.getElementById('expiry-msg').textContent = 'This QR code expires in ' + expiryTime + ' second' + (expiryTime == 1 ? '' : 's');
         }
     }
 
@@ -43,6 +43,6 @@ function updateQRCode() {
     }, 1000);
 }
 
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', () => {
     updateQRCode();
 });
