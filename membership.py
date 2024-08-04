@@ -7,15 +7,26 @@ import sqlite3
 import jwt
 import qrcode
 from dotenv import load_dotenv
-from flask import Flask, abort, jsonify, render_template, request
-
-
-conn = sqlite3.connect('database.db')
-cur = conn.cursor()
+from flask import Flask, abort, g, jsonify, render_template, request
 
 app = Flask(__name__)
 load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
+DATABASE = 'database.db'
+
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
 
 
 def generate_token(user_id):
@@ -76,6 +87,7 @@ def verify():
             return render_template('verify.html', message='Invalid token')
 
         user_id = payload['user_id']
+        cur = get_db().cursor()
         cur.execute('SELECT * FROM users WHERE id = ?', (user_id,))
         user = cur.fetchone()
         if not user:
