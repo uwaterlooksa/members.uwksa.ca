@@ -1,24 +1,21 @@
 import base64
 import datetime
 import io
-import os
 import sqlite3
 
 import jwt
 import qrcode
-from dotenv import load_dotenv
 from flask import Flask, abort, g, jsonify, render_template, request
 
+
 app = Flask(__name__)
-load_dotenv()
-SECRET_KEY = os.getenv('SECRET_KEY')
-DATABASE = 'database.db'
+app.config.from_object('config')
 
 
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(app.config['DATABASE'])
     return db
 
 
@@ -36,7 +33,7 @@ def generate_token(user_id):
         'user_id': user_id,
         'exp': expiration
     }
-    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
 
@@ -77,7 +74,7 @@ def verify():
         try:
             payload = jwt.decode(
                 token,
-                SECRET_KEY,
+                app.config['SECRET_KEY'],
                 algorithms=['HS256'],
                 leeway=datetime.timedelta(seconds=10),
             )
