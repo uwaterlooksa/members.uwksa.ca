@@ -2,14 +2,36 @@ import base64
 import datetime
 import io
 import sqlite3
+from functools import wraps
 
 import jwt
 import qrcode
-from flask import Flask, abort, g, jsonify, render_template, request
-
+from authlib.integrations.flask_client import OAuth
+from flask import (Flask, abort, g, jsonify, redirect, render_template,
+                   request, session, url_for)
 
 app = Flask(__name__)
 app.config.from_object('config')
+
+oauth = OAuth(app)
+oauth.register(
+    name='oidc',
+    client_id=app.config['OIDC_CLIENT_ID'],
+    client_secret=app.config['OIDC_CLIENT_SECRET'],
+    server_metadata_url=app.config['OIDC_DISCOVERY_URL'],
+    client_kwargs={
+        'scope': 'openid profile',
+    }
+)
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if getattr(g, 'user', None) is None:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def get_db():
@@ -96,5 +118,19 @@ def verify():
 
 
 @app.route('/')
+@login_required
 def index():
     return render_template('base.html')
+
+
+@app.route('/login')
+def login():
+    redirect_uri = url_for('auth', _external=True)
+    return oauth.oidc.authorize_redirect(redirect_uri)
+
+
+@app.route('/authorize')
+def auth():
+    token = oauth.oidc.authorize_access_token()
+    session['user'] = token['userinfo']
+    return redirect('/')
