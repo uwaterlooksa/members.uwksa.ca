@@ -126,7 +126,7 @@ def index():
 
 @app.route('/login')
 def login():
-    redirect_uri = url_for('auth', _external=True)
+    redirect_uri = url_for('auth', _external=True, _scheme='https')
     return oauth.oidc.authorize_redirect(redirect_uri)
 
 
