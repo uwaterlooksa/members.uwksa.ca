@@ -2,14 +2,36 @@ import base64
 import datetime
 import io
 import sqlite3
+from functools import wraps
 
 import jwt
 import qrcode
-from flask import Flask, abort, g, jsonify, render_template, request
-
+from authlib.integrations.flask_client import OAuth
+from flask import (Flask, abort, g, jsonify, redirect, render_template,
+                   request, session, url_for)
 
 app = Flask(__name__)
 app.config.from_object('config')
+
+oauth = OAuth(app)
+oauth.register(
+    name='oidc',
+    client_id=app.config['OIDC_CLIENT_ID'],
+    client_secret=app.config['OIDC_CLIENT_SECRET'],
+    server_metadata_url=app.config['OIDC_DISCOVERY_URL'],
+    client_kwargs={
+        'scope': 'openid profile',
+    }
+)
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('user') is None:
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 def get_db():
@@ -57,6 +79,7 @@ def create_qr_code(token):
 
 
 @app.route('/qr-code')
+@login_required
 def qr_code_route():
     if request.headers.get('X-Fetch') != 'true':
         abort(403)
@@ -97,4 +120,23 @@ def verify():
 
 @app.route('/')
 def index():
-    return render_template('base.html')
+    user = session.get('user')
+    return render_template('base.html', user=user)
+
+
+@app.route('/login')
+def login():
+    redirect_uri = url_for('auth', _external=True, _scheme='https')
+    return oauth.oidc.authorize_redirect(redirect_uri)
+
+
+@app.route('/authorize')
+def auth():
+    token = oauth.oidc.authorize_access_token()
+    session['user'] = token['userinfo']
+    return redirect('/')
+
+
+@app.route('/join')
+def join():
+    return jsonify({'message': 'Redirect to WUSA shop page'})
