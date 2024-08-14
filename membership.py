@@ -135,3 +135,8 @@ def auth():
     token = oauth.oidc.authorize_access_token()
     session['user'] = token['userinfo']
     return redirect('/')
+
+
+@app.route('/join')
+def join():
+    return jsonify({'message': 'Redirect to WUSA shop page'})
