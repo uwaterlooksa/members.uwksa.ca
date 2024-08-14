@@ -120,7 +120,8 @@ def verify():
 
 @app.route('/')
 def index():
-    return render_template('base.html')
+    user = session.get('user')
+    return render_template('base.html', user=user)
 
 
 @app.route('/login')

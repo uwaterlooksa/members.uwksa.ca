@@ -7,15 +7,25 @@
     <title>QR Code - UWKSA Membership</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="icon" href="/static/images/KSA.webp" type="image/x-icon">
+    {% if user %}
     <script src="/static/js/qr.js"></script>
+    {% endif %}
 </head>
 
 <body>
     <div class="container">
         <img src="/static/images/KSA-small.webp" class="avatar" alt="">
-        <h1>Member QR Code</h1>
+        {% if user %}
+        <h1>Member QR Code - {{ user.username }}</h1>
         <img id="qr-code" src="" height="300" width="300">
         <p id="expiry-msg">Fetching new QR code</p>
+        {% else %}
+        <h1>UWKSA Members</h1>
+        <div class="buttons">
+            <button><a href="/login">Login</a></button>
+            <button><a href="/join">Join</a></button>
+        </div>
+        {% endif %}
     </div>
 </body>
 

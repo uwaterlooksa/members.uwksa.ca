@@ -33,3 +33,27 @@ body {
 h1 {
     font-size: 30px;
 }
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* margin-top: 20px; */
+    gap: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    width: 100px;
+    font-size: 18px;
+    background-color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+button>a {
+    color: #fff;
+    text-decoration: none;
+}
