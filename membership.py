@@ -79,6 +79,7 @@ def create_qr_code(token):
 
 
 @app.route('/qr-code')
+@login_required
 def qr_code_route():
     if request.headers.get('X-Fetch') != 'true':
         abort(403)
@@ -118,7 +119,6 @@ def verify():
 
 
 @app.route('/')
-@login_required
 def index():
     return render_template('base.html')
 
