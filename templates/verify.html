@@ -16,19 +16,19 @@
         {% if message %}
         <p id="result">{{ message }}</p>
         {% endif %}
-        {% if user %}
+        {% if username and given_name and family_name %}
         <table>
             <tr>
-                <td>Name</td>
-                <td>{{ user[1] + ' ' + user[2] }}</td>
+                <td>First Name</td>
+                <td>{{ given_name }}</td>
             </tr>
             <tr>
-                <td>Email</td>
-                <td>{{ user[3] }}</td>
+                <td>Last Name</td>
+                <td>{{ family_name }}</td>
             </tr>
             <tr>
-                <td>UW ID</td>
-                <td>{{ user[4] }}</td>
+                <td>Username</td>
+                <td>{{ username }}</td>
             </tr>
         </table>
         {% endif %}

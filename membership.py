@@ -28,31 +28,31 @@ oauth.register(
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get('user') is None:
+        if session.get('username') is None:
             return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
 
 def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(app.config['DATABASE'])
-    return db
+    if 'db' not in g:
+        g.db = sqlite3.connect(app.config['DATABASE'])
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
 
 @app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
+def teardown_db(exception):
+    db = g.pop('db', None)
     if db is not None:
         db.close()
 
 
-def generate_token(user_id):
+def generate_token(username):
     expiration = datetime.datetime.now(
         tz=datetime.timezone.utc) + datetime.timedelta(seconds=30)
     payload = {
-        'user_id': user_id,
+        'username': username,
         'exp': expiration
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
@@ -84,8 +84,13 @@ def qr_code_route():
     if request.headers.get('X-Fetch') != 'true':
         abort(403)
 
-    user_id = 1
-    token = generate_token(user_id)
+    username = session.get('username')
+    is_member = session.get('is_member')
+
+    if not username or not is_member:
+        return jsonify({'message': 'User not found'}), 404
+
+    token = generate_token(username)
     b64 = create_qr_code(token)
     return b64
 
@@ -105,23 +110,42 @@ def verify():
             return render_template('verify.html', message='Token expired')
         except jwt.InvalidTokenError:
             return render_template('verify.html', message='Invalid token')
+        except Exception as e:
+            return render_template('verify.html', message="An error occurred: " + str(e))
 
-        user_id = payload['user_id']
-        cur = get_db().cursor()
-        cur.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-        user = cur.fetchone()
-        if not user:
-            return jsonify({'message': 'User not found'}), 404
+        username = payload['username']
+        (given_name, family_name, is_member) = get_db().execute(
+            'SELECT given_name, family_name, is_member FROM users WHERE username = ? LIMIT 1',
+            (username,)
+        ).fetchone()
 
-        return render_template('verify.html', message="User verified", user=user)
+        if not is_member:
+            return render_template('verify.html', message='What? How did you get here?')
+
+        return render_template(
+            'verify.html',
+            message="User verified",
+            username=username,
+            given_name=given_name,
+            family_name=family_name
+        )
     else:
         return render_template('verify.html', message='No token to verify')
 
 
 @app.route('/')
+@login_required
 def index():
-    user = session.get('user')
-    return render_template('base.html', user=user)
+    username = session.get('username')
+    is_member = session.get('is_member')
+
+    if not is_member:
+        is_member = check_if_member(username)
+        session['is_member'] = is_member
+        if not is_member:
+            return redirect('/join')
+
+    return render_template('base.html', username=username)
 
 
 @app.route('/login')
@@ -130,13 +154,45 @@ def login():
     return oauth.oidc.authorize_redirect(redirect_uri)
 
 
+def insert_user_into_db(username):
+    db = get_db()
+    db.execute(
+        'INSERT OR IGNORE INTO users (username, given_name, family_name) VALUES (?, ?, ?)',
+        (username, session['given_name'], session['family_name'])
+    )
+    db.commit()
+
+
+def check_if_member(username):
+    db = get_db()
+    result = db.execute(
+        'SELECT is_member FROM users WHERE username = ? LIMIT 1',
+        (username,)
+    ).fetchone()
+    if result:
+        return result['is_member']
+    return False
+
+
 @app.route('/authorize')
 def auth():
     token = oauth.oidc.authorize_access_token()
-    session['user'] = token['userinfo']
+
+    username = token['userinfo']['username']
+
+    session.permanent = True
+
+    session['username'] = username
+    session['given_name'] = token['userinfo']['given_name']
+    session['family_name'] = token['userinfo']['family_name']
+
+    insert_user_into_db(username)
+
+    session['is_member'] = check_if_member(username)
+
     return redirect('/')
 
 
 @app.route('/join')
 def join():
-    return jsonify({'message': 'Redirect to WUSA shop page'})
+    return redirect(app.config['JOIN_FORM_URL'])
