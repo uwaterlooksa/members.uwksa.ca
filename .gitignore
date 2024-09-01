@@ -7,3 +7,6 @@ __pycache__/
 
 # Database
 *.db
+
+# Members list
+database/members.json
