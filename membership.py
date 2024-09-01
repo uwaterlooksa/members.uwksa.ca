@@ -195,4 +195,4 @@ def auth():
 
 @app.route('/join')
 def join():
-    return jsonify({'message': 'Redirect to WUSA shop page'})
+    return redirect(app.config['JOIN_FORM_URL'])
