@@ -105,6 +105,8 @@ def verify():
             return render_template('verify.html', message='Token expired')
         except jwt.InvalidTokenError:
             return render_template('verify.html', message='Invalid token')
+        except Exception as e:
+            return render_template('verify.html', message="An error occurred: " + str(e))
 
         user_id = payload['user_id']
         cur = get_db().cursor()
