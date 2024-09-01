@@ -4,6 +4,8 @@ const QR_CODE_ELEMENT_ID = 'qr-code';
 const EXPIRY_MSG_ELEMENT_ID = 'expiry-msg';
 const QR_CODE_EXPIRY_TIME = 30; // seconds
 
+let intervalId = null;
+
 async function getQRCode() {
     try {
         const response = await fetch(QR_CODE_URL, { headers: FETCH_HEADERS });
@@ -30,7 +32,7 @@ function updateQRCode() {
             expiryTime = QR_CODE_EXPIRY_TIME;
             refreshExpiryMessage();
 
-            const intervalId = setInterval(async () => {
+            intervalId = setInterval(async () => {
                 expiryTime--;
                 refreshExpiryMessage();
                 if (expiryTime <= 0) {
@@ -55,3 +57,12 @@ function updateQRCode() {
 }
 
 document.addEventListener('DOMContentLoaded', updateQRCode);
+
+document.addEventListener('visibilitychange', () => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+    if (document.visibilityState === 'visible') {
+        updateQRCode();
+    }
+});
