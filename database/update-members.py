@@ -11,7 +11,11 @@ with open(members_json) as f:
     usernames = members['usernames']
     for username in usernames:
         conn.execute(
-            'UPDATE users SET is_member = TRUE WHERE username = ?',
+            'INSERT OR IGNORE INTO users (username) VALUES (?)',
+            (username,)
+        )
+        conn.execute(
+            'UPDATE users SET is_member = 1 WHERE username = ?',
             (username,)
         )
 

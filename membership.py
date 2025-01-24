@@ -139,13 +139,16 @@ def index():
     username = session.get('username')
     is_member = session.get('is_member')
 
-    if not is_member:
-        is_member = check_if_member(username)
-        session['is_member'] = is_member
-        if not is_member:
-            return redirect('/join')
+    # if not is_member:
+    #     is_member = check_if_member(username)
+    #     session['is_member'] = is_member
+    #     if not is_member:
+    #         return redirect('/join')
 
-    return render_template('base.html', username=username)
+    # return render_template('base.html', username=username)
+
+    # W25 TODO
+    return redirect('/join')
 
 
 @app.route('/login')
@@ -159,6 +162,15 @@ def insert_user_into_db(username):
     db.execute(
         'INSERT OR IGNORE INTO users (username, given_name, family_name) VALUES (?, ?, ?)',
         (username, session['given_name'], session['family_name'])
+    )
+    db.commit()
+
+
+def update_name(username):
+    db = get_db()
+    db.execute(
+        'UPDATE users SET given_name = ?, family_name = ? WHERE username = ? AND given_name IS NULL',
+        (session['given_name'], session['family_name'], username)
     )
     db.commit()
 
@@ -187,6 +199,7 @@ def auth():
     session['family_name'] = token['userinfo']['family_name']
 
     insert_user_into_db(username)
+    update_name(username)
 
     session['is_member'] = check_if_member(username)
 
@@ -195,4 +208,7 @@ def auth():
 
 @app.route('/join')
 def join():
-    return redirect(app.config['JOIN_FORM_URL'])
+    # return redirect(app.config['JOIN_FORM_URL'])
+    # W25 TODO
+    # return simple message for now
+    return "The UWKSA membership will return soon for W25. Stay tuned!"
